@@ -1,0 +1,3 @@
+[submodule "test-suite-validator"]
+	path = test-suite-validator
+	url = https://gitlab.com/sosy-lab/software/test-suite-validator.git
