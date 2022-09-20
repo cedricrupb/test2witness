@@ -3,8 +3,14 @@ from utils import main
 import json
 import os
 
+BASE_DIR = os.path.dirname(os.path.realpath(__file__))
+
+def _resolve_path(path):
+    if os.path.exists(path): return path
+    return os.path.join(BASE_DIR, path)
+
 import sys
-sys.path.append("./test-suite-validator/")
+sys.path.append(_resolve_path("./test-suite-validator/"))
 import suite_validation
 
 from suite_validation import execution as exe
