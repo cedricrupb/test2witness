@@ -1,5 +1,3 @@
-from utils import main
-
 import json
 import os
 
@@ -8,6 +6,11 @@ BASE_DIR = os.path.dirname(os.path.realpath(__file__))
 def _resolve_path(path):
     if os.path.exists(path): return path
     return os.path.join(BASE_DIR, path)
+
+# Silence Git Python Warning
+os.environ["GIT_PYTHON_REFRESH"] = "quiet"
+
+from utils import main
 
 import sys
 sys.path.append(_resolve_path("./test-suite-validator/"))
@@ -27,8 +30,10 @@ def test2witness(program_path : str, test_path : str,
                     spec : str = "",
                     producer: str = "Test2Witness"):
 
-    name, ext = os.path.splitext(program_path)
+    base_name = os.path.basename(program_path)
+    name, ext = os.path.splitext(base_name)
     instrumented_path = name + "-instrumented" + ext
+    instrumented_path = os.path.join(os.path.dirname(output), instrumented_path)
 
     # Instrument the code
     instrument(program_path, instrumented_path)

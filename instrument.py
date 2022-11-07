@@ -141,6 +141,10 @@ class Instrumenter(ASTVisitor):
 
        # Decide scope
        declarator = node.child_by_field_name("declarator")
+       
+       while declarator.type != "function_declarator":
+            declarator = declarator.child_by_field_name("declarator")
+
        func_name  = declarator.child_by_field_name("declarator")
        assert func_name.type == "identifier", func_name.type
 
