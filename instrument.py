@@ -238,11 +238,11 @@ class Instrumenter(ASTVisitor):
 
 
     def _write_condition_node(self, condition_node, consequence_node, true_branch = False, skip = False, ignore_reads = False):
+        condition = self.ast.match(condition_node)
 
         if ignore_reads:
             reads = set()
         else:
-            condition = self.ast.match(condition_node)
             reads     = VariableVisitor()
             reads.walk(condition_node)
             reads     = set(self.ast.match(n) for n in reads.vars)
