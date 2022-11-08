@@ -24,7 +24,7 @@ def instrument(program_file : str, output_file : str):
 
 
 def _instrument(source_code):
-    program_ast = code_ast.ast(source_code, lang = "c")
+    program_ast = code_ast.ast(source_code, lang = "c", syntax_error = "warn")
 
     # Run instrumentation
     instrumenter = ProgramInstrumenter(program_ast)
@@ -237,11 +237,15 @@ class Instrumenter(ASTVisitor):
         )
 
 
-    def _write_condition_node(self, condition_node, consequence_node, true_branch = False, skip = False):
-        condition = self.ast.match(condition_node)
-        reads     = VariableVisitor()
-        reads.walk(condition_node)
-        reads     = set(self.ast.match(n) for n in reads.vars)
+    def _write_condition_node(self, condition_node, consequence_node, true_branch = False, skip = False, ignore_reads = False):
+
+        if ignore_reads:
+            reads = set()
+        else:
+            condition = self.ast.match(condition_node)
+            reads     = VariableVisitor()
+            reads.walk(condition_node)
+            reads     = set(self.ast.match(n) for n in reads.vars)
 
         # Ensure every statement in compound
         self._write_condition(condition, 
@@ -310,7 +314,7 @@ class Instrumenter(ASTVisitor):
                 self.instrument("\n}", pos = consequence.end_point)
 
         condition_node = node.child_by_field_name("condition")
-        self._write_condition_node(condition_node, consequence, False, skip = True)
+        self._write_condition_node(condition_node, consequence, False, skip = True, ignore_reads = True)
 
 
     def visit_while_statement(self, node):

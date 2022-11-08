@@ -1,6 +1,7 @@
 import re
 from typing import List
 
+import code_ast
 
 def remove_comments(text):
     """
@@ -63,12 +64,14 @@ def unsupported_to_extern(code: str, replacings: List, unsupported: str) -> str:
                     depth = 1
             else:
                 open = code.find("{", open + 1)
+                if open == -1: raise ValueError("Something went wrong")
                 depth += 1
         previous_end = max(code[:start].rfind(";"), code[:start].rfind("}")) + 1
         save = code[previous_end:end]
         code = ";".join([code[:start], code[end:]])
         code = "extern ".join([code[:previous_end], code[previous_end:]])
         replacings += [(regex(code[previous_end:start + 8]), save)]
+    
     return code
 
 
@@ -78,7 +81,10 @@ def support_extensions(code: str, func):
     replacings = []  # pattern-string combinations which later must be replaced
 
     # remove unsupported parts
-    code = unsupported_to_extern(code, replacings, "__extension__")
+    try:
+        code = unsupported_to_extern(code, replacings, "__extension__")
+    except ValueError:
+        replacings = []
 
     for keyword in ("inline", "restrict"):
         if f"__{keyword} " in code and not re.search(f"(?<!__){keyword}", code):
