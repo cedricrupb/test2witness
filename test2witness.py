@@ -108,6 +108,7 @@ def _parse_observations(exec_output):
     for line in exec_output.splitlines():
         try:
             observation = json.loads(line)
+            assert isinstance(observation, dict), "Invalid observation: %s" % line
         except Exception:
             continue
 
