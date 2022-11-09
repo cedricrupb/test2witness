@@ -111,6 +111,7 @@ class Instrumenter(ASTVisitor):
         self.scope   = []
         self.control = None
 
+
     def instrument(self, text, pos = None):
         pos = pos or (self._state.line, self._state.line_offset)
 
@@ -134,6 +135,14 @@ class Instrumenter(ASTVisitor):
     def printf_json(self, object, track_args = None, pos = None):
         if "sourcecode" in object: object["sourcecode"] = html.escape(object["sourcecode"])
         self.printf(json.dumps(object), track_args = track_args, pos = pos)
+
+    def _track_var(self, variable_name):
+
+        if variable_name.upper() == variable_name:
+            # This is likely a constant, do not track
+            return False
+
+        return True
     
     # Visitor functions -----------------------------
 
@@ -189,6 +198,7 @@ class Instrumenter(ASTVisitor):
         written_vars = VariableVisitor()
         written_vars.walk(node)
         written_vars = set(self.ast.match(n) for n in written_vars.vars)
+        written_vars = set(var for var in written_vars if self._track_var(var))
 
         start_line = node.start_point[0]
         end_line   = node.end_point[0]
@@ -224,6 +234,8 @@ class Instrumenter(ASTVisitor):
             "endline"   : 1 + endline,
             "control"   : "condition-%s" % ("true" if true_branch else "false")
         }
+
+        changed_vars = [var for var in changed_vars if self._track_var(var)]
 
         if len(changed_vars) > 0:
             output["assumption"] = ";".join(
