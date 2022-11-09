@@ -1,5 +1,6 @@
 import json
 import os
+import resource
 
 BASE_DIR = os.path.dirname(os.path.realpath(__file__))
 
@@ -27,8 +28,11 @@ def test2witness(program_path : str, test_path : str,
                     output : str = "witness.graphml",
                     machine_model : str = "m64",
                     timelimit : int = 900,
+                    memory : str = None,
                     spec : str = "",
                     producer: str = "Test2Witness"):
+    
+    if memory is not None: _limit_memory(parse_memory(memory))
 
     base_name = os.path.basename(program_path)
     name, ext = os.path.splitext(base_name)
@@ -146,6 +150,29 @@ def _populate_witness(witness, exec_output):
 
     return witness
 
+
+# Helper ------------------------
+
+def _limit_memory(memory):
+    rsrc = resource.RLIMIT_DATA
+    soft, hard = resource.getrlimit(rsrc)
+    soft = min(soft, memory)
+    resource.setrlimit(rsrc, (soft, hard))
+
+
+def parse_memory(memory):
+    factor = 1
+    if memory.endswith("K"): factor = 1024
+    if memory.endswith("M"): factor = 1024 ** 2
+    if memory.endswith("G"): factor = 1024 ** 3
+
+    if factor != 1: memory = memory[:-1]
+
+    try:
+        return factor * int(memory)
+    except Exception:
+        print("Cannot parse %s. Use 100M instead." % memory)
+        return 100 * (1024 ** 2)
 
 
 if __name__ == '__main__':
